@@ -1,10 +1,9 @@
 import json
-import multiprocessing
 import random
 import sys
 
 import names
-from requests import post
+from requests import post, Response
 
 
 class Player:
@@ -20,32 +19,19 @@ def store_player_data():
     name: str = names.get_full_name()
     score: int = random.randint(0, 200)
     player: Player = Player(score, name)
-    post(
+    response: Response = post(
         url="http://localhost:8888/players",
         json=player.__dict__,
         headers={"Content-Type": "application/json"}
     )
-
-
-THREADS: int = 4
+    print(f"player: {player}, status code: {response.status_code}")
 
 
 def main():
     argv = sys.argv[1:]
     size: int = int(argv[0])
-    remainder: int = size // THREADS
-
-    chunk = [0 for _ in range(THREADS)]
-    chunks = [chunk for _ in range(remainder)]
-
-    processes = []
-    for _ in chunks:
-        p = multiprocessing.Process(target=store_player_data)
-        processes.append(p)
-        p.start()
-
-    for p in processes:
-        p.join()
+    for _ in range(size):
+        store_player_data()
 
 
 if __name__ == "__main__":
